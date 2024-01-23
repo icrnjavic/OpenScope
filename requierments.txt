@@ -1,0 +1,5 @@
+opencv-python
+PySimpleGUI
+Pillow
+numpy
+tk
