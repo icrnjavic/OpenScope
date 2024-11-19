@@ -1,5 +1,4 @@
 opencv-python
-PySimpleGUI
+PySimpleGUI==4.60.5.0
 Pillow
 numpy
-tk
