@@ -36,7 +36,17 @@ def main():
         if event == 'camera' and values['camera']:
             if cap is not None:
                 cap.release()
-            cap = cv2.VideoCapture(camera_list.index(values['camera']))
+            
+            camera_name = values['camera']
+            if "DirectShow" in camera_name:
+                index = int(camera_name.split()[1].split('(')[0])
+                cap = cv2.VideoCapture(index, cv2.CAP_DSHOW)
+            elif "Backend" in camera_name:
+                backend = int(camera_name.split()[-1].strip(')'))
+                cap = cv2.VideoCapture(0, backend)
+            else:
+                index = int(camera_name.split()[1])
+                cap = cv2.VideoCapture(index)
 
         if event == 'zoom_in':
             zoom_factor = min(zoom_factor * 1.25, 3)  
@@ -77,16 +87,36 @@ def add_text_to_image(image, text):
     return cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2BGR)
 
 def list_cameras():
-    index = 0
     arr = []
-    while True:
+    for index in range(10):
         cap = cv2.VideoCapture(index)
-        if not cap.read()[0]:
-            break
-        else:
-            arr.append(f"Camera {index}")
+        if cap.isOpened():
+            ret, frame = cap.read()
+            if ret and frame is not None and frame.size > 0:
+                arr.append(f"Camera {index}")
             cap.release()
-        index += 1
+    
+
+    if not arr:
+        for index in range(10):
+            cap = cv2.VideoCapture(index, cv2.CAP_DSHOW)
+            if cap.isOpened():
+                ret, frame = cap.read()
+                if ret and frame is not None and frame.size > 0:
+                    arr.append(f"Camera {index} (DirectShow)")
+                cap.release()
+    
+
+    if not arr:
+        backends = [cv2.CAP_ANY, cv2.CAP_DSHOW, cv2.CAP_MSMF]
+        for backend in backends:
+            cap = cv2.VideoCapture(0, backend)
+            if cap.isOpened():
+                ret, frame = cap.read()
+                if ret and frame is not None and frame.size > 0:
+                    arr.append(f"Default Camera (Backend {backend})")
+                cap.release()
+    
     return arr
 
 def save_image_dialog(image):
